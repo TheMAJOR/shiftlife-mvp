@@ -11,49 +11,55 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (OUTLINE & HIGH CONTRAST) ---
+# --- 3. DYNAMIC STYLING (THE UPLOADER FORCE FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE (Subtle Borders)
+        # NIGHT MODE
         bg_color = "#0E1117"
         sec_bg_color = "#262730"
         text_color = "#FAFAFA"
         btn_bg = "#262730"
         btn_text = "#FAFAFA"
-        border_style = "1px solid #444" # Thin grey border for night
+        border_style = "1px solid #666"
         
-        # Uploader (Night)
+        # UPLOADER (Night Mode)
         uploader_css = f"""
-        div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
+        div[data-testid="stFileUploader"] section {{ 
+            background-color: {sec_bg_color} !important; 
+        }}
         div[data-testid="stFileUploader"] button {{ 
             background-color: {sec_bg_color} !important; 
             color: {text_color} !important; 
-            border: {border_style} !important; 
-        }}
-        div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
-            color: {text_color} !important;
+            border: 1px solid {text_color} !important; 
         }}
         """
         
     else:
-        # DAY MODE (HIGH CONTRAST OUTLINES)
+        # DAY MODE (High Contrast)
         bg_color = "#FFFFFF"
         sec_bg_color = "#F0F2F6"
         text_color = "#000000"
         btn_bg = "#FFFFFF"
         btn_text = "#000000"
-        border_style = "2px solid #000000" # THICK BLACK BORDER for visibility
+        border_style = "2px solid #000000"
         
-        # Uploader (Day - With Outline)
+        # UPLOADER (Day Mode - FORCE VISIBILITY)
         uploader_css = f"""
-        div[data-testid="stFileUploader"] section {{ background-color: #F0F2F6 !important; }}
+        /* 1. The Box Background */
+        div[data-testid="stFileUploader"] section {{ 
+            background-color: #E0E2E6 !important; /* Slightly darker grey to contrast with white page */
+        }}
+        
+        /* 2. The 'Browse Files' Button */
         div[data-testid="stFileUploader"] button {{ 
             background-color: #FFFFFF !important; 
             color: #000000 !important; 
-            border: {border_style} !important; 
+            border: 2px solid #000000 !important; /* THICK BLACK BORDER */
             font-weight: bold !important;
         }}
-        div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
+        
+        /* 3. The Text 'Drag and drop...' */
+        div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] span {{
             color: #000000 !important;
         }}
         """
@@ -70,7 +76,7 @@ def apply_theme():
     /* TEXT - Force High Contrast */
     h1, h2, h3, h4, h5, h6, p, li, span, div, label {{ color: {text_color} !important; }}
     
-    /* BUTTONS - WITH OUTLINE */
+    /* STANDARD BUTTONS */
     div.stButton > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -79,11 +85,10 @@ def apply_theme():
         font-weight: bold !important;
     }}
     
-    /* BUTTON HOVER EFFECT */
     div.stButton > button:hover {{
         border-color: {text_color} !important;
         color: {bg_color} !important;
-        background-color: {text_color} !important; /* Invert colors on hover */
+        background-color: {text_color} !important;
     }}
 
     /* CARDS */
@@ -99,10 +104,10 @@ def apply_theme():
         padding: 15px;
     }}
     
-    /* TOGGLE SWITCH TEXT FIX */
+    /* TOGGLE SWITCH TEXT */
     div[data-testid="stToggle"] label p {{
         color: {text_color} !important;
-        font-weight: 900 !important; /* Extra Bold */
+        font-weight: 900 !important;
     }}
     
     /* INJECT UPLOADER CSS */
