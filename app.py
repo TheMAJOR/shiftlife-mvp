@@ -11,7 +11,7 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (IRONCLAD BUTTON FIX) ---
+# --- 3. DYNAMIC STYLING (THE UPLOADER FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
         # NIGHT MODE PALETTE
@@ -22,6 +22,22 @@ def apply_theme():
         btn_bg = "#262730"
         btn_text = "#FAFAFA"
         
+        # UPLOADER SPECIFIC CSS (NIGHT)
+        uploader_css = f"""
+        /* The Dropzone Box */
+        div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
+        /* The 'Browse Files' Button */
+        div[data-testid="stFileUploader"] button {{ 
+            background-color: {sec_bg_color} !important; 
+            color: {text_color} !important; 
+            border: 1px solid {border_color} !important; 
+        }}
+        /* The Text 'Drag and drop' */
+        div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
+            color: {text_color} !important;
+        }}
+        """
+        
     else:
         # DAY MODE PALETTE
         bg_color = "#FFFFFF"
@@ -30,6 +46,22 @@ def apply_theme():
         border_color = "#CCCCCC"
         btn_bg = "#F0F2F6"
         btn_text = "#000000"
+
+        # UPLOADER SPECIFIC CSS (DAY - Force Light)
+        uploader_css = f"""
+        /* The Dropzone Box - Light Grey */
+        div[data-testid="stFileUploader"] section {{ background-color: #F0F2F6 !important; }}
+        /* The 'Browse Files' Button - White with Black Text */
+        div[data-testid="stFileUploader"] button {{ 
+            background-color: #FFFFFF !important; 
+            color: #000000 !important; 
+            border: 1px solid #CCCCCC !important; 
+        }}
+        /* The Text 'Drag and drop' - Black */
+        div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
+            color: #000000 !important;
+        }}
+        """
 
     # THE MASTER CSS BLOCK
     css = f"""
@@ -43,7 +75,7 @@ def apply_theme():
     /* TEXT COLORING - FORCE EVERYTHING */
     h1, h2, h3, h4, h5, h6, p, li, span, div, label {{ color: {text_color} !important; }}
     
-    /* BUTTONS - THE SPECIFIC FIX */
+    /* STANDARD BUTTONS */
     div.stButton > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -67,12 +99,8 @@ def apply_theme():
         padding: 15px;
     }}
     
-    /* FILE UPLOADER FIX */
-    div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
-    div[data-testid="stFileUploader"] button {{ 
-        color: {btn_text} !important; 
-        border-color: {border_color} !important; 
-    }}
+    /* INJECT THE UPLOADER FIX */
+    {uploader_css}
     
     /* Hide Branding */
     #MainMenu {{visibility: hidden;}}
