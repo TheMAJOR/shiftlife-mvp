@@ -19,7 +19,7 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 if 'roster_data' not in st.session_state:
     st.session_state['roster_data'] = None
 
-# --- 3. CORE LOGIC (THE UPGRADED BRAIN) ---
+# --- 3. CORE LOGIC (THE BRAIN) ---
 def get_daily_schedule(shift_code):
     """
     Returns specific time blocks for Work, Sleep, and Leisure based on shift type.
@@ -48,7 +48,7 @@ def get_daily_schedule(shift_code):
             "Color": "green",
             "Work": "None",
             "Sleep": "23:00 - 08:00 (Natural)",
-            "Leisure": "10:00 - 12:00 & 18:00 - 21:00",
+            "Leisure": "All Day",
             "Activity": "🏋️ Gym, Date Night, or Hiking"
         }
     else:
@@ -70,16 +70,21 @@ if mode == "partner":
     if st.session_state['roster_data'] is not None:
         df = st.session_state['roster_data']
         
-        st.subheader("Next Green Days (Free)")
-        # Filter for OFF days
-        green_days = df[df['Shift Code'] == "OFF"]
+        st.subheader("Upcoming Schedule")
         
-        if not green_days.empty:
-            for index, row in green_days.iterrows():
-                # Clean Green Card for Partner
+        # Iterate through ALL days, but customize the display
+        for index, row in df.iterrows():
+            
+            # SCENARIO 1: COMPLETELY FREE
+            if row['Shift Code'] == "OFF":
                 st.success(f"**{row['Date']}** | ✅ FREE ALL DAY")
-        else:
-            st.warning("No free days found in this batch.")
+            
+            # SCENARIO 2: WORKING, BUT HAS FREE TIME
+            else:
+                # We use a blue 'info' box for partial availability
+                # This highlights the "Golden Window" specifically
+                st.info(f"**{row['Date']}** | 🕒 Free: **{row['Leisure']}**")
+                
     else:
         st.error("No schedule has been published yet.")
         
@@ -123,7 +128,6 @@ else:
         df = pd.DataFrame(data)
         
         # Apply the Detailed Schedule Logic
-        # We apply the function and expand the result into separate columns
         schedule_data = df['Shift Code'].apply(lambda x: pd.Series(get_daily_schedule(x)))
         df = pd.concat([df, schedule_data], axis=1)
         
@@ -140,7 +144,7 @@ else:
         
         for index, row in df.iterrows():
             with st.container():
-                # 1. THE HEADER (Color Coded)
+                # HEADER
                 header_text = f"**{row['Date']}** | {row['Status']}"
                 if row['Color'] == "red":
                     st.error(header_text)
@@ -149,25 +153,18 @@ else:
                 else:
                     st.success(header_text)
                 
-                # 2. THE DETAILED SCHEDULE (Inside the card context)
-                # We use columns to make it look like a dashboard
+                # DETAILS
                 c1, c2 = st.columns(2)
-                
                 with c1:
-                    st.markdown("**💼 Work Shift**")
+                    st.markdown("**💼 Work**")
                     st.caption(f"{row['Work']}")
-                    
-                    st.markdown("**🛏️ Sleep Schedule**")
+                    st.markdown("**🛏️ Sleep**")
                     st.markdown(f"`{row['Sleep']}`")
-                
                 with c2:
-                    st.markdown("**🎉 Golden Window**")
+                    st.markdown("**🎉 Leisure**")
                     st.caption(f"{row['Leisure']}")
-                    
-                    st.markdown("**💡 Suggested Activity**")
+                    st.markdown("**💡 Idea**")
                     st.info(f"{row['Activity']}")
-            
-            # Divider between days
             st.divider()
 
         # PARTNER LINK
