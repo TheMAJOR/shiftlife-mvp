@@ -11,34 +11,26 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (THE PRO FIX) ---
+# --- 3. DYNAMIC STYLING (IRONCLAD BUTTON FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE COLORS
+        # NIGHT MODE PALETTE
         bg_color = "#0E1117"
         sec_bg_color = "#262730"
         text_color = "#FAFAFA"
         border_color = "#444"
+        btn_bg = "#262730"
+        btn_text = "#FAFAFA"
         
-        # Specific Fix for Night Mode Uploader
-        uploader_css = """
-        div[data-testid="stFileUploader"] section { background-color: #262730 !important; }
-        div[data-testid="stFileUploader"] button { color: #FAFAFA !important; border-color: #FAFAFA !important; }
-        """
     else:
-        # DAY MODE COLORS
+        # DAY MODE PALETTE
         bg_color = "#FFFFFF"
         sec_bg_color = "#F0F2F6"
         text_color = "#000000"
         border_color = "#CCCCCC"
-        
-        # Specific Fix for Day Mode Uploader (Forces it White/Gray)
-        uploader_css = """
-        div[data-testid="stFileUploader"] section { background-color: #F0F2F6 !important; }
-        div[data-testid="stFileUploader"] button { color: #000000 !important; border-color: #000000 !important; }
-        span, p, div, label { color: #000000 !important; } 
-        """
-    
+        btn_bg = "#F0F2F6"
+        btn_text = "#000000"
+
     # THE MASTER CSS BLOCK
     css = f"""
     <style>
@@ -48,7 +40,21 @@ def apply_theme():
     /* Sidebar Background */
     section[data-testid="stSidebar"] {{ background-color: {sec_bg_color} !important; }}
     
-    /* Cards / Expanders / Containers */
+    /* TEXT COLORING - FORCE EVERYTHING */
+    h1, h2, h3, h4, h5, h6, p, li, span, div, label {{ color: {text_color} !important; }}
+    
+    /* BUTTONS - THE SPECIFIC FIX */
+    div.stButton > button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    div.stButton > button:hover {{
+        border-color: {text_color} !important;
+        color: {text_color} !important;
+    }}
+
+    /* CARDS & CONTAINERS */
     div[data-testid="stExpander"] {{ 
         background-color: {sec_bg_color} !important; 
         border: 1px solid {border_color} !important; 
@@ -61,14 +67,12 @@ def apply_theme():
         padding: 15px;
     }}
     
-    /* Text Coloring */
-    h1, h2, h3, h4, h5, h6, p, li, span, div {{ color: {text_color} !important; }}
-    
-    /* Input Labels */
-    label {{ color: {text_color} !important; }}
-    
-    /* Uploader Specifics */
-    {uploader_css}
+    /* FILE UPLOADER FIX */
+    div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
+    div[data-testid="stFileUploader"] button {{ 
+        color: {btn_text} !important; 
+        border-color: {border_color} !important; 
+    }}
     
     /* Hide Branding */
     #MainMenu {{visibility: hidden;}}
@@ -134,7 +138,7 @@ if mode == "partner":
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # HERO CARD (TODAY)
+        # HERO CARD
         today_row = df[df['Date'] == today_str]
         if not today_row.empty:
             row = today_row.iloc[0]
@@ -155,7 +159,7 @@ if mode == "partner":
 
         st.divider()
         
-        # FULL UPCOMING SCHEDULE
+        # UPCOMING SCHEDULE
         st.subheader("Upcoming Schedule")
         future_days = df[df['Date'] > today_str]
         if not future_days.empty:
@@ -180,13 +184,11 @@ if mode == "partner":
 # VIEW 2: SARAH'S APP (Nurse Dashboard)
 # ==========================================
 else:
-    # --- TOGGLE BUTTON (MOVED TO TOP FOR MOBILE ACCESS) ---
-    # We move the toggle out of the sidebar to the top right so it's always visible on mobile
+    # --- TOGGLE BUTTON ---
     c1, c2 = st.columns([4, 1])
     with c1:
         st.title("ShiftLife 🏥")
     with c2:
-        # Mini Toggle Switch
         is_dark = st.toggle("🌙", value=st.session_state['dark_mode'])
         if is_dark != st.session_state['dark_mode']:
             st.session_state['dark_mode'] = is_dark
@@ -260,7 +262,7 @@ else:
 
         st.divider()
         
-        # 30-DAY CALENDAR (EXPANDABLE)
+        # 30-DAY CALENDAR
         st.subheader("📅 Full 30-Day Calendar")
         
         for index, row in df.iterrows():
