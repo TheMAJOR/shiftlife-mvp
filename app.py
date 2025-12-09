@@ -11,53 +11,72 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (NUCLEAR FIX) ---
+# --- 3. DYNAMIC STYLING (THE PRO FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE CSS
-        theme_style = """
-        <style>
-        .stApp { background-color: #0E1117; color: #FAFAFA; }
-        section[data-testid="stSidebar"] { background-color: #262730; color: #FAFAFA; }
-        div[data-testid="stExpander"] { background-color: #262730; border: 1px solid #444; color: #FAFAFA; }
-        p, span, h1, h2, h3, div { color: #FAFAFA; }
-        </style>
+        # NIGHT MODE COLORS
+        bg_color = "#0E1117"
+        sec_bg_color = "#262730"
+        text_color = "#FAFAFA"
+        border_color = "#444"
+        
+        # Specific Fix for Night Mode Uploader
+        uploader_css = """
+        div[data-testid="stFileUploader"] section { background-color: #262730 !important; }
+        div[data-testid="stFileUploader"] button { color: #FAFAFA !important; border-color: #FAFAFA !important; }
         """
     else:
-        # DAY MODE CSS (The Nuclear Option)
-        theme_style = """
-        <style>
-        /* Force Main Background White */
-        .stApp { background-color: #FFFFFF !important; }
+        # DAY MODE COLORS
+        bg_color = "#FFFFFF"
+        sec_bg_color = "#F0F2F6"
+        text_color = "#000000"
+        border_color = "#CCCCCC"
         
-        /* Force Sidebar Light Gray */
-        section[data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
-        
-        /* Force ALL Text Black */
-        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, li, span, label, div {
-            color: #000000 !important;
-        }
-        
-        /* Fix Expander/Cards Background for Day Mode */
-        div[data-testid="stExpander"] { 
-            background-color: #FFFFFF !important; 
-            border: 1px solid #CCC !important; 
-            color: #000000 !important;
-        }
-        
-        /* Specific Fix for Metrics/Info Boxes */
-        div[data-testid="stMetricValue"] { color: #000000 !important; }
-        </style>
+        # Specific Fix for Day Mode Uploader (Forces it White/Gray)
+        uploader_css = """
+        div[data-testid="stFileUploader"] section { background-color: #F0F2F6 !important; }
+        div[data-testid="stFileUploader"] button { color: #000000 !important; border-color: #000000 !important; }
+        span, p, div, label { color: #000000 !important; } 
         """
     
-    hide_st = """
+    # THE MASTER CSS BLOCK
+    css = f"""
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Main Background */
+    .stApp {{ background-color: {bg_color} !important; }}
+    
+    /* Sidebar Background */
+    section[data-testid="stSidebar"] {{ background-color: {sec_bg_color} !important; }}
+    
+    /* Cards / Expanders / Containers */
+    div[data-testid="stExpander"] {{ 
+        background-color: {sec_bg_color} !important; 
+        border: 1px solid {border_color} !important; 
+        color: {text_color} !important;
+    }}
+    div[data-testid="stContainer"] {{
+        background-color: {sec_bg_color};
+        border: 1px solid {border_color};
+        border-radius: 10px;
+        padding: 15px;
+    }}
+    
+    /* Text Coloring */
+    h1, h2, h3, h4, h5, h6, p, li, span, div {{ color: {text_color} !important; }}
+    
+    /* Input Labels */
+    label {{ color: {text_color} !important; }}
+    
+    /* Uploader Specifics */
+    {uploader_css}
+    
+    /* Hide Branding */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
     </style>
     """
-    st.markdown(theme_style + hide_st, unsafe_allow_html=True)
+    st.markdown(css, unsafe_allow_html=True)
 
 apply_theme()
 
@@ -115,9 +134,8 @@ if mode == "partner":
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY (HERO CARD) ---
+        # HERO CARD (TODAY)
         today_row = df[df['Date'] == today_str]
-        
         if not today_row.empty:
             row = today_row.iloc[0]
             st.header("📅 Today's Status")
@@ -137,21 +155,14 @@ if mode == "partner":
 
         st.divider()
         
-        # --- SECTION 2: FULL UPCOMING SCHEDULE (UPDATED) ---
+        # FULL UPCOMING SCHEDULE
         st.subheader("Upcoming Schedule")
-        
-        # Filter for all future dates
         future_days = df[df['Date'] > today_str]
-        
         if not future_days.empty:
             for index, row in future_days.iterrows():
-                # Logic to determine what to show
                 if row['Shift Code'] == "OFF":
-                    # Full Free Day
                     st.success(f"**{row['Date']}** | ✅ FREE ALL DAY")
                 else:
-                    # Working Day - Show Partial Availability
-                    # We use a neutral message that highlights the FREE time
                     msg = f"**{row['Date']}** | {row['Emoji']} Working. Free: **{row['Leisure']}**"
                     st.info(msg)
         else:
@@ -169,20 +180,18 @@ if mode == "partner":
 # VIEW 2: SARAH'S APP (Nurse Dashboard)
 # ==========================================
 else:
-    # Sidebar
-    with st.sidebar:
-        st.header("⚙️ Settings")
-        is_dark = st.toggle("🌙 Night Mode", value=st.session_state['dark_mode'])
+    # --- TOGGLE BUTTON (MOVED TO TOP FOR MOBILE ACCESS) ---
+    # We move the toggle out of the sidebar to the top right so it's always visible on mobile
+    c1, c2 = st.columns([4, 1])
+    with c1:
+        st.title("ShiftLife 🏥")
+    with c2:
+        # Mini Toggle Switch
+        is_dark = st.toggle("🌙", value=st.session_state['dark_mode'])
         if is_dark != st.session_state['dark_mode']:
             st.session_state['dark_mode'] = is_dark
             st.rerun()
-            
-    c1, c2 = st.columns([1, 5])
-    with c1:
-        st.markdown("### 🏥")
-    with c2:
-        st.title("ShiftLife")
-    
+
     # INPUT SECTION
     if st.session_state['roster_data'] is None:
         uploaded_file = st.file_uploader("📸 Snap/Upload Roster Photo", type=['png', 'jpg', 'jpeg'])
@@ -213,7 +222,7 @@ else:
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY (HERO) ---
+        # TODAY (HERO)
         today_row = df[df['Date'] == today_str]
         
         if not today_row.empty:
@@ -221,7 +230,6 @@ else:
             st.markdown("## ⚡ Today's Action Plan")
             
             with st.container():
-                # HEADER
                 header_md = f"### {row['Date']} | {row['Status']}"
                 if row['Color'] == "red":
                     st.error(header_md)
@@ -252,19 +260,15 @@ else:
 
         st.divider()
         
-        # --- SECTION 2: 30-DAY CALENDAR (CLICKABLE DETAILS) ---
+        # 30-DAY CALENDAR (EXPANDABLE)
         st.subheader("📅 Full 30-Day Calendar")
-        st.caption("Click on any date to see the full Bio-Hack plan.")
         
         for index, row in df.iterrows():
             if row['Date'] == today_str:
                 continue
             
-            # Use Expander for "Click to see details" functionality
             label = f"{row['Date']} | {row['Emoji']} {row['Status']}"
             with st.expander(label):
-                
-                # Inside the click, show the full detailed dashboard
                 c1, c2 = st.columns(2)
                 with c1:
                     st.markdown("**🛏️ Sleep Protocol**")
