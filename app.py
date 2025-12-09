@@ -11,42 +11,45 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (THE FIX) ---
+# --- 3. DYNAMIC STYLING (NUCLEAR FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE CSS (Deep Blue/Black) - Default behavior matches config.toml
+        # NIGHT MODE CSS
         theme_style = """
         <style>
         .stApp { background-color: #0E1117; color: #FAFAFA; }
-        /* Containers */
-        div[data-testid="stContainer"] { background-color: #262730; border: 1px solid #444; }
+        section[data-testid="stSidebar"] { background-color: #262730; color: #FAFAFA; }
+        div[data-testid="stExpander"] { background-color: #262730; border: 1px solid #444; color: #FAFAFA; }
+        p, span, h1, h2, h3, div { color: #FAFAFA; }
         </style>
         """
     else:
-        # DAY MODE CSS (THE FIX: Force Black Text on Everything)
+        # DAY MODE CSS (The Nuclear Option)
         theme_style = """
         <style>
-        /* Force Background White */
-        .stApp { background-color: #FFFFFF; }
+        /* Force Main Background White */
+        .stApp { background-color: #FFFFFF !important; }
         
-        /* Force ALL Text Elements Black */
+        /* Force Sidebar Light Gray */
+        section[data-testid="stSidebar"] { background-color: #F0F2F6 !important; }
+        
+        /* Force ALL Text Black */
         .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, li, span, label, div {
             color: #000000 !important;
         }
         
-        /* Fix the Container/Cards for Day Mode */
-        div[data-testid="stContainer"] { 
-            background-color: #F0F2F6; 
-            border: 1px solid #CCC; 
+        /* Fix Expander/Cards Background for Day Mode */
+        div[data-testid="stExpander"] { 
+            background-color: #FFFFFF !important; 
+            border: 1px solid #CCC !important; 
             color: #000000 !important;
         }
         
-        /* Fix Input/Uploader Labels */
-        .stFileUploader label { color: #000000 !important; }
+        /* Specific Fix for Metrics/Info Boxes */
+        div[data-testid="stMetricValue"] { color: #000000 !important; }
         </style>
         """
     
-    # Hide Streamlit Branding (Standard Polish)
     hide_st = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -56,15 +59,15 @@ def apply_theme():
     """
     st.markdown(theme_style + hide_st, unsafe_allow_html=True)
 
-# Apply the theme at the start of every run
 apply_theme()
 
-# --- 4. CORE LOGIC (CIRCADIAN RHYTHM) ---
+# --- 4. CORE LOGIC ---
 def get_daily_schedule(shift_code):
     if shift_code == "N":
         return {
             "Status": "⛔ NIGHT SHIFT",
             "Color": "red",
+            "Emoji": "🔴",
             "Work": "19:00 - 07:00 (Next Morning)",
             "Sleep": "😴 08:00 AM - 11:00 AM (Core Sleep)",
             "BioHack": "☀️ 11:00 AM: WAKE UP & GET SUNLIGHT.",
@@ -75,6 +78,7 @@ def get_daily_schedule(shift_code):
         return {
             "Status": "🏥 DAY SHIFT",
             "Color": "orange",
+            "Emoji": "🟠",
             "Work": "07:00 - 19:00",
             "Sleep": "😴 22:00 - 06:00 (Pre-shift)",
             "BioHack": "🥗 Eat high protein at 12:00 PM.",
@@ -85,6 +89,7 @@ def get_daily_schedule(shift_code):
         return {
             "Status": "✅ OFF DUTY",
             "Color": "green",
+            "Emoji": "🟢",
             "Work": "None",
             "Sleep": "😴 23:00 - 08:00 (Natural)",
             "BioHack": "🏃‍♀️ Cardio Zone 2 to flush cortisol.",
@@ -93,7 +98,7 @@ def get_daily_schedule(shift_code):
         }
     else:
         return {
-            "Status": "Unknown", "Color": "gray", "Work": "-", "Sleep": "-", "BioHack": "-", "Leisure": "-", "Activity": "-"
+            "Status": "Unknown", "Color": "gray", "Emoji": "⚪", "Work": "-", "Sleep": "-", "BioHack": "-", "Leisure": "-", "Activity": "-"
         }
 
 # --- 5. CHECK URL MODE ---
@@ -110,13 +115,12 @@ if mode == "partner":
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY'S STATUS ---
+        # --- SECTION 1: TODAY (HERO CARD) ---
         today_row = df[df['Date'] == today_str]
         
         if not today_row.empty:
             row = today_row.iloc[0]
             st.header("📅 Today's Status")
-            
             with st.container():
                 st.markdown(f"### {today_str}")
                 if row['Shift Code'] == "OFF":
@@ -133,15 +137,25 @@ if mode == "partner":
 
         st.divider()
         
-        # --- SECTION 2: UPCOMING SCHEDULE ---
-        st.subheader("Upcoming Free Days")
-        green_days = df[(df['Shift Code'] == "OFF") & (df['Date'] > today_str)]
+        # --- SECTION 2: FULL UPCOMING SCHEDULE (UPDATED) ---
+        st.subheader("Upcoming Schedule")
         
-        if not green_days.empty:
-            for index, row in green_days.iterrows():
-                st.success(f"**{row['Date']}** | ✅ FREE ALL DAY")
+        # Filter for all future dates
+        future_days = df[df['Date'] > today_str]
+        
+        if not future_days.empty:
+            for index, row in future_days.iterrows():
+                # Logic to determine what to show
+                if row['Shift Code'] == "OFF":
+                    # Full Free Day
+                    st.success(f"**{row['Date']}** | ✅ FREE ALL DAY")
+                else:
+                    # Working Day - Show Partial Availability
+                    # We use a neutral message that highlights the FREE time
+                    msg = f"**{row['Date']}** | {row['Emoji']} Working. Free: **{row['Leisure']}**"
+                    st.info(msg)
         else:
-            st.caption("No upcoming free days found in this roster.")
+            st.caption("No upcoming schedule found.")
             
     else:
         st.error("No schedule has been published yet.")
@@ -155,10 +169,9 @@ if mode == "partner":
 # VIEW 2: SARAH'S APP (Nurse Dashboard)
 # ==========================================
 else:
-    # Sidebar for Settings
+    # Sidebar
     with st.sidebar:
         st.header("⚙️ Settings")
-        # DAY / NIGHT TOGGLE
         is_dark = st.toggle("🌙 Night Mode", value=st.session_state['dark_mode'])
         if is_dark != st.session_state['dark_mode']:
             st.session_state['dark_mode'] = is_dark
@@ -200,7 +213,7 @@ else:
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY'S ACTION PLAN ---
+        # --- SECTION 1: TODAY (HERO) ---
         today_row = df[df['Date'] == today_str]
         
         if not today_row.empty:
@@ -217,7 +230,6 @@ else:
                 else:
                     st.success(header_md)
 
-                # CIRCADIAN PROTOCOL
                 st.markdown("#### 🧬 Circadian Protocol")
                 c1, c2 = st.columns(2)
                 with c1:
@@ -227,7 +239,6 @@ else:
                     st.markdown("**🧪 Bio-Hack**")
                     st.warning(f"{row['BioHack']}")
                 
-                # SCHEDULE
                 st.markdown("#### 📅 Schedule")
                 c3, c4 = st.columns(2)
                 with c3:
@@ -241,22 +252,33 @@ else:
 
         st.divider()
         
-        # --- SECTION 2: FULL MONTH VIEW ---
-        with st.expander("📅 View Full 30-Day Calendar"):
-            for index, row in df.iterrows():
-                if row['Date'] == today_str:
-                    continue
-                    
-                with st.container():
-                    st.markdown(f"**{row['Date']}** | {row['Status']}")
-                    c_a, c_b = st.columns(2)
-                    with c_a:
-                        st.caption(f"Sleep: {row['Sleep']}")
-                    with c_b:
-                        st.caption(f"Free: {row['Leisure']}")
-                st.write("") 
+        # --- SECTION 2: 30-DAY CALENDAR (CLICKABLE DETAILS) ---
+        st.subheader("📅 Full 30-Day Calendar")
+        st.caption("Click on any date to see the full Bio-Hack plan.")
+        
+        for index, row in df.iterrows():
+            if row['Date'] == today_str:
+                continue
+            
+            # Use Expander for "Click to see details" functionality
+            label = f"{row['Date']} | {row['Emoji']} {row['Status']}"
+            with st.expander(label):
+                
+                # Inside the click, show the full detailed dashboard
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.markdown("**🛏️ Sleep Protocol**")
+                    st.info(row['Sleep'])
+                    st.markdown("**💼 Work Hours**")
+                    st.caption(row['Work'])
+                with c2:
+                    st.markdown("**🧪 Bio-Hack**")
+                    st.warning(row['BioHack'])
+                    st.markdown("**🎉 Golden Window**")
+                    st.caption(f"{row['Leisure']} ({row['Activity']})")
 
         # PARTNER LINK
+        st.divider()
         st.header("🔗 Relationship Saver")
         st.write("Mark doesn't need to download the app. Send him this web link:")
         
