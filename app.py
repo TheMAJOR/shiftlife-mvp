@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 # --- 1. CONFIGURATION & UI POLISH ---
 st.set_page_config(page_title="ShiftLife", page_icon="🏥", layout="centered")
 
-# Hide Streamlit Branding (Hamburger menu, footer)
+# Hide Streamlit Branding
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -30,7 +30,7 @@ def calculate_life_plan(shift_code):
     else:
         return "Unknown", "⚪ Check", "Waiting for input..."
 
-# --- 4. CHECK URL MODE (Nurse vs Partner) ---
+# --- 4. CHECK URL MODE ---
 query_params = st.query_params
 mode = query_params.get("mode", "nurse") 
 
@@ -68,7 +68,7 @@ else:
     # Header with Logo Placeholder
     c1, c2 = st.columns([1, 5])
     with c1:
-        st.markdown("### 🏥") # You can replace this with st.image("logo.png")
+        st.markdown("### 🏥")
     with c2:
         st.title("ShiftLife")
     
@@ -80,11 +80,10 @@ else:
     # PROCESS UPLOAD
     if uploaded_file is not None:
         # --- THE 30-DAY GENERATOR ---
-        # 1. Define the Roster Pattern (The "Rhythm")
-        # Change this list to match the story you want to tell.
+        # Define the Roster Pattern (2 Days, 2 Nights, 4 Off)
         shift_pattern = ["D", "D", "N", "N", "OFF", "OFF", "OFF", "OFF"]
 
-        # 2. Generate 30 Days of Data
+        # Generate 30 Days of Data
         dates = []
         codes = []
         start_date = datetime.now()
@@ -92,16 +91,11 @@ else:
         for i in range(30):
             current_date = start_date + timedelta(days=i)
             dates.append(current_date.strftime('%Y-%m-%d'))
-            
-            # Loop the pattern
             code_index = i % len(shift_pattern)
             codes.append(shift_pattern[code_index])
 
-        # 3. Build DataFrame
-        data = {
-            "Date": dates,
-            "Shift Code": codes
-        }
+        # Build DataFrame
+        data = { "Date": dates, "Shift Code": codes }
         df = pd.DataFrame(data)
         df[['Status', 'Traffic Light', 'Advice']] = df['Shift Code'].apply(
             lambda x: pd.Series(calculate_life_plan(x))
@@ -111,31 +105,30 @@ else:
         st.session_state['roster_data'] = df
         st.toast("30-Day Roster Generated!", icon="📅")
 
-    # DISPLAY SCHEDULE
+    # DISPLAY SCHEDULE (THE POLISHED CARD VIEW)
     if st.session_state['roster_data'] is not None:
         df = st.session_state['roster_data']
         
         st.write("---")
         st.subheader("Your Life Plan (Next 30 Days)")
         
-        # --- IMPROVED CARD DISPLAY (Clean List) ---
+        # Iterate and show CLEAN cards
         for index, row in df.iterrows():
             with st.container():
-                c1, c2 = st.columns([1, 2])
-                with c1:
-                    st.markdown(f"**{row['Date']}**")
-                    if "NIGHT" in row['Status']:
-                        st.markdown("⛔ **NIGHT**")
-                    elif "DAY" in row['Status']:
-                        st.markdown("🏥 **DAY**")
-                    else:
-                        st.markdown("🟢 **OFF**")
-                with c2:
-                    st.caption("Protocol:")
-                    st.info(f"{row['Advice']}")
-            st.divider()
+                # Color coding the cards based on shift type
+                # The advice is tucked inside nicely as italic text
+                if "NIGHT" in row['Status']:
+                    st.error(f"**{row['Date']}** | {row['Status']}\n\n*{row['Advice']}*")
+                elif "DAY" in row['Status']:
+                    st.warning(f"**{row['Date']}** | {row['Status']}\n\n*{row['Advice']}*")
+                else:
+                    st.success(f"**{row['Date']}** | {row['Status']}\n\n*{row['Advice']}*")
+                
+                # Small spacer between cards
+                st.write("") 
 
         # PARTNER LINK SECTION
+        st.divider()
         st.header("🔗 Relationship Saver")
         st.write("Mark doesn't need to download the app. Send him this web link:")
         
