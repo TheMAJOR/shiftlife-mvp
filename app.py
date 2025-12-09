@@ -11,24 +11,24 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (THE NUCLEAR TOGGLE FIX) ---
+# --- 3. DYNAMIC STYLING (OUTLINE & HIGH CONTRAST) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE PALETTE
+        # NIGHT MODE (Subtle Borders)
         bg_color = "#0E1117"
         sec_bg_color = "#262730"
         text_color = "#FAFAFA"
-        border_color = "#444"
         btn_bg = "#262730"
         btn_text = "#FAFAFA"
+        border_style = "1px solid #444" # Thin grey border for night
         
-        # UPLOADER SPECIFIC CSS (NIGHT)
+        # Uploader (Night)
         uploader_css = f"""
         div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
         div[data-testid="stFileUploader"] button {{ 
             background-color: {sec_bg_color} !important; 
             color: {text_color} !important; 
-            border: 1px solid {border_color} !important; 
+            border: {border_style} !important; 
         }}
         div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
             color: {text_color} !important;
@@ -36,21 +36,22 @@ def apply_theme():
         """
         
     else:
-        # DAY MODE PALETTE
+        # DAY MODE (HIGH CONTRAST OUTLINES)
         bg_color = "#FFFFFF"
         sec_bg_color = "#F0F2F6"
         text_color = "#000000"
-        border_color = "#CCCCCC"
-        btn_bg = "#F0F2F6"
+        btn_bg = "#FFFFFF"
         btn_text = "#000000"
-
-        # UPLOADER SPECIFIC CSS (DAY)
+        border_style = "2px solid #000000" # THICK BLACK BORDER for visibility
+        
+        # Uploader (Day - With Outline)
         uploader_css = f"""
         div[data-testid="stFileUploader"] section {{ background-color: #F0F2F6 !important; }}
         div[data-testid="stFileUploader"] button {{ 
             background-color: #FFFFFF !important; 
             color: #000000 !important; 
-            border: 1px solid #CCCCCC !important; 
+            border: {border_style} !important; 
+            font-weight: bold !important;
         }}
         div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
             color: #000000 !important;
@@ -63,43 +64,48 @@ def apply_theme():
     /* Main Background */
     .stApp {{ background-color: {bg_color} !important; }}
     
-    /* Sidebar Background */
+    /* Sidebar */
     section[data-testid="stSidebar"] {{ background-color: {sec_bg_color} !important; }}
     
-    /* TEXT COLORING - FORCE EVERYTHING */
+    /* TEXT - Force High Contrast */
     h1, h2, h3, h4, h5, h6, p, li, span, div, label {{ color: {text_color} !important; }}
     
-    /* STANDARD BUTTONS */
+    /* BUTTONS - WITH OUTLINE */
     div.stButton > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
-        border: 1px solid {border_color} !important;
+        border: {border_style} !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
     }}
+    
+    /* BUTTON HOVER EFFECT */
     div.stButton > button:hover {{
         border-color: {text_color} !important;
-        color: {text_color} !important;
+        color: {bg_color} !important;
+        background-color: {text_color} !important; /* Invert colors on hover */
     }}
 
-    /* CARDS & CONTAINERS */
+    /* CARDS */
     div[data-testid="stExpander"] {{ 
         background-color: {sec_bg_color} !important; 
-        border: 1px solid {border_color} !important; 
+        border: {border_style} !important; 
         color: {text_color} !important;
     }}
     div[data-testid="stContainer"] {{
         background-color: {sec_bg_color};
-        border: 1px solid {border_color};
+        border: 1px solid #CCCCCC;
         border-radius: 10px;
         padding: 15px;
     }}
     
-    /* TOGGLE SWITCH NUCLEAR FIX */
-    /* Target every single element inside the toggle and force the color */
-    div[data-testid="stToggle"] * {{
+    /* TOGGLE SWITCH TEXT FIX */
+    div[data-testid="stToggle"] label p {{
         color: {text_color} !important;
+        font-weight: 900 !important; /* Extra Bold */
     }}
     
-    /* INJECT THE UPLOADER FIX */
+    /* INJECT UPLOADER CSS */
     {uploader_css}
     
     /* Hide Branding */
@@ -217,9 +223,8 @@ else:
     with c1:
         st.title("ShiftLife 🏥")
     with c2:
-        # We change the label text dynamically to ensure visibility
+        # Dynamic Label for the toggle
         label_text = "🌙 Night" if st.session_state['dark_mode'] else "☀️ Day"
-        
         is_dark = st.toggle(label_text, value=st.session_state['dark_mode'])
         if is_dark != st.session_state['dark_mode']:
             st.session_state['dark_mode'] = is_dark
