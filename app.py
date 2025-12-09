@@ -11,7 +11,7 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (THE UPLOADER FIX) ---
+# --- 3. DYNAMIC STYLING (THE TOGGLE FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
         # NIGHT MODE PALETTE
@@ -24,15 +24,12 @@ def apply_theme():
         
         # UPLOADER SPECIFIC CSS (NIGHT)
         uploader_css = f"""
-        /* The Dropzone Box */
         div[data-testid="stFileUploader"] section {{ background-color: {sec_bg_color} !important; }}
-        /* The 'Browse Files' Button */
         div[data-testid="stFileUploader"] button {{ 
             background-color: {sec_bg_color} !important; 
             color: {text_color} !important; 
             border: 1px solid {border_color} !important; 
         }}
-        /* The Text 'Drag and drop' */
         div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
             color: {text_color} !important;
         }}
@@ -47,17 +44,14 @@ def apply_theme():
         btn_bg = "#F0F2F6"
         btn_text = "#000000"
 
-        # UPLOADER SPECIFIC CSS (DAY - Force Light)
+        # UPLOADER SPECIFIC CSS (DAY)
         uploader_css = f"""
-        /* The Dropzone Box - Light Grey */
         div[data-testid="stFileUploader"] section {{ background-color: #F0F2F6 !important; }}
-        /* The 'Browse Files' Button - White with Black Text */
         div[data-testid="stFileUploader"] button {{ 
             background-color: #FFFFFF !important; 
             color: #000000 !important; 
             border: 1px solid #CCCCCC !important; 
         }}
-        /* The Text 'Drag and drop' - Black */
         div[data-testid="stFileUploader"] span, div[data-testid="stFileUploader"] small, div[data-testid="stFileUploader"] div {{
             color: #000000 !important;
         }}
@@ -97,6 +91,15 @@ def apply_theme():
         border: 1px solid {border_color};
         border-radius: 10px;
         padding: 15px;
+    }}
+    
+    /* TOGGLE SWITCH FIX (NEW) */
+    div[data-testid="stToggle"] label p {{
+        color: {text_color} !important;
+        font-weight: bold;
+    }}
+    div[data-testid="stToggle"] {{
+        color: {text_color} !important;
     }}
     
     /* INJECT THE UPLOADER FIX */
