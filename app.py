@@ -11,24 +11,38 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (DAY/NIGHT MODE) ---
+# --- 3. DYNAMIC STYLING (THE FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
-        # NIGHT MODE CSS (Deep Blue/Black)
+        # NIGHT MODE CSS (Deep Blue/Black) - Default behavior matches config.toml
         theme_style = """
         <style>
         .stApp { background-color: #0E1117; color: #FAFAFA; }
-        .stMarkdown, .stText, h1, h2, h3 { color: #FAFAFA !important; }
-        div[data-testid="stContainer"] { background-color: #262730; border-radius: 10px; padding: 15px; border: 1px solid #444; }
+        /* Containers */
+        div[data-testid="stContainer"] { background-color: #262730; border: 1px solid #444; }
         </style>
         """
     else:
-        # DAY MODE CSS (Clean White/Gray)
+        # DAY MODE CSS (THE FIX: Force Black Text on Everything)
         theme_style = """
         <style>
-        .stApp { background-color: #FFFFFF; color: #000000; }
-        .stMarkdown, .stText, h1, h2, h3 { color: #000000 !important; }
-        div[data-testid="stContainer"] { background-color: #F0F2F6; border-radius: 10px; padding: 15px; border: 1px solid #CCC; }
+        /* Force Background White */
+        .stApp { background-color: #FFFFFF; }
+        
+        /* Force ALL Text Elements Black */
+        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, li, span, label, div {
+            color: #000000 !important;
+        }
+        
+        /* Fix the Container/Cards for Day Mode */
+        div[data-testid="stContainer"] { 
+            background-color: #F0F2F6; 
+            border: 1px solid #CCC; 
+            color: #000000 !important;
+        }
+        
+        /* Fix Input/Uploader Labels */
+        .stFileUploader label { color: #000000 !important; }
         </style>
         """
     
@@ -45,7 +59,7 @@ def apply_theme():
 # Apply the theme at the start of every run
 apply_theme()
 
-# --- 4. CORE LOGIC (CIRCADIAN RHYTHM UPDATE) ---
+# --- 4. CORE LOGIC (CIRCADIAN RHYTHM) ---
 def get_daily_schedule(shift_code):
     if shift_code == "N":
         return {
@@ -53,7 +67,7 @@ def get_daily_schedule(shift_code):
             "Color": "red",
             "Work": "19:00 - 07:00 (Next Morning)",
             "Sleep": "😴 08:00 AM - 11:00 AM (Core Sleep)",
-            "BioHack": "☀️ 11:00 AM: WAKE UP & GET SUNLIGHT. (Reset Clock)",
+            "BioHack": "☀️ 11:00 AM: WAKE UP & GET SUNLIGHT.",
             "Leisure": "16:00 - 18:00 (Before Work)",
             "Activity": "🧘 Light Yoga or Meal Prep"
         }
@@ -63,7 +77,7 @@ def get_daily_schedule(shift_code):
             "Color": "orange",
             "Work": "07:00 - 19:00",
             "Sleep": "😴 22:00 - 06:00 (Pre-shift)",
-            "BioHack": "🥗 Eat high protein at 12:00 PM. No caffeine after 2 PM.",
+            "BioHack": "🥗 Eat high protein at 12:00 PM.",
             "Leisure": "19:30 - 21:00",
             "Activity": "📺 Netflix (Wind Down)"
         }
@@ -96,14 +110,13 @@ if mode == "partner":
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY'S STATUS (SEPARATE PAGE FEEL) ---
+        # --- SECTION 1: TODAY'S STATUS ---
         today_row = df[df['Date'] == today_str]
         
         if not today_row.empty:
-            row = today_row.iloc[0] # Get the single row
+            row = today_row.iloc[0]
             st.header("📅 Today's Status")
             
-            # Big Hero Card for Today
             with st.container():
                 st.markdown(f"### {today_str}")
                 if row['Shift Code'] == "OFF":
@@ -180,23 +193,22 @@ else:
             df = pd.concat([df, schedule_data], axis=1)
             
             st.session_state['roster_data'] = df
-            st.rerun() # Refresh to show the dashboard immediately
+            st.rerun() 
 
     # DASHBOARD DISPLAY
     if st.session_state['roster_data'] is not None:
         df = st.session_state['roster_data']
         today_str = datetime.now().strftime('%Y-%m-%d')
         
-        # --- SECTION 1: TODAY'S ACTION PLAN (SEPARATE PAGE FEEL) ---
+        # --- SECTION 1: TODAY'S ACTION PLAN ---
         today_row = df[df['Date'] == today_str]
         
         if not today_row.empty:
             row = today_row.iloc[0]
             st.markdown("## ⚡ Today's Action Plan")
             
-            # THE "NOW" CARD
             with st.container():
-                # Dynamic Header Color based on Shift
+                # HEADER
                 header_md = f"### {row['Date']} | {row['Status']}"
                 if row['Color'] == "red":
                     st.error(header_md)
@@ -205,7 +217,7 @@ else:
                 else:
                     st.success(header_md)
 
-                # CIRCADIAN PROTOCOL (The "Science" Part)
+                # CIRCADIAN PROTOCOL
                 st.markdown("#### 🧬 Circadian Protocol")
                 c1, c2 = st.columns(2)
                 with c1:
@@ -232,7 +244,6 @@ else:
         # --- SECTION 2: FULL MONTH VIEW ---
         with st.expander("📅 View Full 30-Day Calendar"):
             for index, row in df.iterrows():
-                # Skip today (since we showed it above)
                 if row['Date'] == today_str:
                     continue
                     
@@ -243,4 +254,12 @@ else:
                         st.caption(f"Sleep: {row['Sleep']}")
                     with c_b:
                         st.caption(f"Free: {row['Leisure']}")
-                st.write("") #
+                st.write("") 
+
+        # PARTNER LINK
+        st.header("🔗 Relationship Saver")
+        st.write("Mark doesn't need to download the app. Send him this web link:")
+        
+        if st.button("Simulate Mark Clicking the Link 🚀"):
+            st.query_params["mode"] = "partner"
+            st.rerun()
