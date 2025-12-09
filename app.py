@@ -11,7 +11,7 @@ if 'roster_data' not in st.session_state:
 if 'dark_mode' not in st.session_state:
     st.session_state['dark_mode'] = True
 
-# --- 3. DYNAMIC STYLING (THE TOGGLE FIX) ---
+# --- 3. DYNAMIC STYLING (THE NUCLEAR TOGGLE FIX) ---
 def apply_theme():
     if st.session_state['dark_mode']:
         # NIGHT MODE PALETTE
@@ -93,12 +93,9 @@ def apply_theme():
         padding: 15px;
     }}
     
-    /* TOGGLE SWITCH FIX (NEW) */
-    div[data-testid="stToggle"] label p {{
-        color: {text_color} !important;
-        font-weight: bold;
-    }}
-    div[data-testid="stToggle"] {{
+    /* TOGGLE SWITCH NUCLEAR FIX */
+    /* Target every single element inside the toggle and force the color */
+    div[data-testid="stToggle"] * {{
         color: {text_color} !important;
     }}
     
@@ -220,7 +217,10 @@ else:
     with c1:
         st.title("ShiftLife 🏥")
     with c2:
-        is_dark = st.toggle("🌙", value=st.session_state['dark_mode'])
+        # We change the label text dynamically to ensure visibility
+        label_text = "🌙 Night" if st.session_state['dark_mode'] else "☀️ Day"
+        
+        is_dark = st.toggle(label_text, value=st.session_state['dark_mode'])
         if is_dark != st.session_state['dark_mode']:
             st.session_state['dark_mode'] = is_dark
             st.rerun()
